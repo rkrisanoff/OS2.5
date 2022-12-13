@@ -44,7 +44,7 @@ int main(int argc, char **argv)
            lcid->it_ITIMER_VIRTUAL.expires, lcid->it_ITIMER_VIRTUAL.incr);
 
     struct lab_pci_dev_data * lpdd = malloc(sizeof (struct lab_pci_dev_data));
-    ret_val = syscall(__NR_syscall_pci_dev, MAX_DEV_COUNT, lpdd);
+    ret_val = syscall(__NR_syscall_pci_dev, 10, lpdd);
     if (ret_val != 0)
     {
         printf("syscall_pci_dev failed %d: process with <PID> = %d doesn't exist\n", ret_val);
