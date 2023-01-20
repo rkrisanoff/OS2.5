@@ -5,13 +5,19 @@
 #include <linux/sched/signal.h>
 #include <linux/vmalloc.h>
 
+pthread_mutex_t mutex;
+
 SYSCALL_DEFINE2(cpu_itimer, pid_t, pid_user, struct lab_cpu_itimer_data *, lcid_user)
 {
+	pthread_mutex_init(&mutex, NULL);
+	pthread_mutex_lock(&mutex);
 	struct task_struct *task = NULL;
 	struct pid *pid_struct = find_get_pid(pid_user);
 	if (pid_struct == NULL)
 	{
 		printk(KERN_INFO "PID %d doesn't exist", pid_user);
+		pthread_mutex_unlock(&mutex);
+		pthread_mutex_destroy(&mutex);
 		return 1;
 	}
 	task = pid_task(pid_struct, PIDTYPE_PID);
@@ -21,6 +27,8 @@ SYSCALL_DEFINE2(cpu_itimer, pid_t, pid_user, struct lab_cpu_itimer_data *, lcid_
 	if (task == NULL)
 	{
 		printk(KERN_INFO "Process with PID=%d doesn't exist", pid_user);
+		pthread_mutex_unlock(&mutex);
+		pthread_mutex_destroy(&mutex);
 		return 2;
 	}
 	struct lab_cpu_itimer_data *lcid = vmalloc(sizeof(struct lab_cpu_itimer_data));
@@ -33,5 +41,7 @@ SYSCALL_DEFINE2(cpu_itimer, pid_t, pid_user, struct lab_cpu_itimer_data *, lcid_
 	lcid->it_ITIMER_VIRTUAL.incr = it_ITIMER_VIRTUAL.incr;
 	copy_to_user(lcid_user, lcid, sizeof(struct lab_cpu_itimer_data));
 	vfree(lcid);
+	pthread_mutex_unlock(&mutex);
+	pthread_mutex_destroy(&mutex);
 	return 0;
 };
